@@ -29,7 +29,7 @@ ErrCode dgyStackResize(DgyStack *s, size_t newSize)
         cell_t *newStack = (cell_t *)realloc(s->stack, newSize * sizeof(cell_t));
         if (newStack == NULL)
         {
-                perror("dgyStackResize: realloc() failed");          
+                perror("dgyStackResize: realloc() failed");
                 return CODE_FAILURE;
         }
         s->stack = newStack;
@@ -43,7 +43,7 @@ ErrCode dgyStackDestroy(DgyStack *s)
         {
                 dgySetErr(ERR_NULLPTR, L"dgyStackDestroy");
                 return CODE_FAILURE;
-        }        
+        }
         free(s->stack);
         memset(s, 0, sizeof(DgyStack));
         return CODE_SUCCESS;
@@ -55,7 +55,7 @@ ErrCode dgyStackPop(DgyStack *s)
         {
                 dgySetErr(ERR_NULLPTR, L"dgyStackPop");
                 return CODE_FAILURE;
-        }        
+        }
         if (s->sp == 0)
         {
                 dgySetErr(ERR_UNDERFLOW, L"dgyStackPop");
@@ -76,7 +76,7 @@ ErrCode dgyStackPush(DgyStack *s, cell_t data)
         {
                 dgySetErr(ERR_NULLPTR, L"dgyStackPush");
                 return CODE_FAILURE;
-        }        
+        }
         if (s->sp == s->size / 2 && (CODE_SUCCESS != dgyStackResize(s, 2 * s->size)))
         {
                 dgyGetErr();
@@ -165,14 +165,14 @@ ErrCode dgyStackDump(const DgyStack *s, i32 start, i32 end)
         {
                 if (i >= 0 && i < s->size)
                 {
-                        wprintf(L"0x%llX ", s->stack[i]);
+                        wprintf(L"0x%llX ", s->stack[i].data.uint);
                 }
                 else
                 {
                         dgySetErr(ERR_OUT_OF_BOUNDS, L"dgyStackDump");
                         return CODE_FAILURE;
                 }
-        }        
+        }
         wprintf(L"\n");
         return CODE_SUCCESS;
 }

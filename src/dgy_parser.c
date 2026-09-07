@@ -29,11 +29,11 @@ static i32 match_LoopCheck(DgyParser *parser, StatType *matchedType);
 static i32 match_LoopEnd(DgyParser *parser, StatType *matchedType);
 
 static bool matchStat(const StatType statType,
-                     i32 (*match)(DgyParser *, StatType *),
-                     DgyParser *parser, StatType *matchedType);
+                      i32 (*match)(DgyParser *, StatType *),
+                      DgyParser *parser, StatType *matchedType);
 
 static const StatType _statType[] =
-{
+    {
         ST_WORD_BEGIN,
         ST_WORD_END,
         ST_MOV,
@@ -50,13 +50,13 @@ static const StatType _statType[] =
 };
 
 static i32 (*_matchStatFuncList[])(DgyParser *, StatType *) =
-{
+    {
         /* Must be the same order of statType[] */
         /* e.g. _matchStatFuncList[ST_WORD_BEGIN] = match_WordBegin */
-        match_WordBegin,  /* Word Declaration Begin */
-        match_WordEnd,    /* Word Declaration End */
+        match_WordBegin, /* Word Declaration Begin */
+        match_WordEnd,   /* Word Declaration End */
         match_Mov,       /* Move Value */
-        match_SimpWord,   /* Simple Word Declaration */
+        match_SimpWord,  /* Simple Word Declaration */
         match_Exec,      /* Execute Word */
         match_If,        /* Branch Begin */
         match_Else,      /* Branch Else */
@@ -69,7 +69,7 @@ static i32 (*_matchStatFuncList[])(DgyParser *, StatType *) =
 };
 
 static ErrCode getSymbol(FILE *in, DgyStack *symbolStack, DgyStack *analyStack)
-{        
+{
         if (CODE_SUCCESS == dgyDoLexerOnce(in, symbolStack))
         {
                 cell_t top;
@@ -77,9 +77,10 @@ static ErrCode getSymbol(FILE *in, DgyStack *symbolStack, DgyStack *analyStack)
                 if (CELL_FLAG_LEN == top.type)
                 {
                         /* Multi-cell symbol */
-                        /* cell =
-                           { .data=(unused),
-                             .type=CELL_LEXER_XXX }
+                        /* cell = {
+                            .data = (unused),
+                            .type = CELL_LEXER_XXX
+                        }
                         */
                         cell_t second;
                         /* Get symbol's type */
@@ -89,9 +90,10 @@ static ErrCode getSymbol(FILE *in, DgyStack *symbolStack, DgyStack *analyStack)
                 else
                 {
                         /* Single-cell symbol */
-                        /* cell =
-                           { .data=(symbol value),
-                             .type=CELL_LEXER_XXX }
+                        /* cell = {
+                            .data = (symbol value),
+                            .type = CELL_LEXER_XXX,
+                        }
                         */
                         dgyStackPush(analyStack, top);
                 }
@@ -146,7 +148,7 @@ static inline bool isValue(cell_t *s)
 }
 
 static inline bool isImmd(cell_t *s)
-{        
+{
         return s->type == CELL_LEXER_IMMD;
 }
 
@@ -302,7 +304,7 @@ static i32 match_Mov(DgyParser *parser, StatType *matchedType)
                 break;
         case 1: /* <Value> | <CellReg> */
                 if (isValue(&sym) || isCellReg(&sym))
-                {                        
+                {
                         status = 2;
                         dgyAppendData(analyser, symbolStack);
                 }
@@ -869,8 +871,8 @@ static i32 match_LoopEnd(DgyParser *parser, StatType *matchedType)
 }
 
 static bool matchStat(const StatType statType,
-                     i32 (*match)(DgyParser *, StatType *),
-                     DgyParser *parser, StatType *matchedType)
+                      i32 (*match)(DgyParser *, StatType *),
+                      DgyParser *parser, StatType *matchedType)
 {
         bool matched = false;
         if (MATCH_COMPLETED == match(parser, matchedType))

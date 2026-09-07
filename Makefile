@@ -1,6 +1,6 @@
 SRC = src/*.c
 TAR = dgy
-CC = zig cc
+CC = gcc
 CFLAGS = -g -Wall
 
 all:

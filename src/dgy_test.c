@@ -6,12 +6,12 @@ static void test_lexer(void)
         DgyStack buffer;
         dgyStackInit(&buffer, 16);
         dgyDoLexerOnce(stdin, &buffer);
-        dgyStackDump(&buffer, -1, -1);        
+        dgyStackDump(&buffer, -1, -1);
 }
 
 static void test_parser(void)
 {
-        DgyStack code;        
+        DgyStack code;
         dgyStackInit(&code, 16);
 
         DgyDict word;
@@ -21,7 +21,7 @@ static void test_parser(void)
 
         DgyParser parser;
         dgyParserInit(&parser, &code, &word);
-        
+
         dgyDoParserOnce(&parser, stdin);
         dgyStackDump(&code, BUILTIN_CNT, -1);
         dgyDoParserOnce(&parser, stdin);
@@ -39,5 +39,5 @@ void dgyUnitTest(void)
                 test_lexer();
                 test_parser();
         }
-        test_parser();                                
+        test_parser();
 }

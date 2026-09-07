@@ -14,79 +14,75 @@ static SymbolType sym_Op(FILE *in, wint_t wc, wchar_t *buffer);
 static SymbolType sym_Word(FILE *in, wint_t wc, wchar_t *buffer);
 static SymbolType sym_Cell(FILE *in, wint_t wc, wchar_t *buffer);
 
-static void matched_Immd(const wchar_t buffer[], SymbolType type, DgyStack *out);
-static void matched_Str(const wchar_t buffer[], SymbolType type, DgyStack *out);
-static void matched_Comment(const wchar_t buffer[], SymbolType type, DgyStack *out);
-static void matched_Reserved(const wchar_t buffer[], SymbolType type, DgyStack *out);
-static void matched_Op(const wchar_t buffer[], SymbolType type, DgyStack *out);
-static void matched_Word(const wchar_t buffer[], SymbolType type, DgyStack *out);
-static void matched_Cell(const wchar_t buffer[], SymbolType type, DgyStack *out);
+static void matched_Immd(const wchar_t *buffer, SymbolType type, DgyStack *out);
+static void matched_Str(const wchar_t *buffer, SymbolType type, DgyStack *out);
+static void matched_Comment(const wchar_t *buffer, SymbolType type, DgyStack *out);
+static void matched_Reserved(const wchar_t *buffer, SymbolType type, DgyStack *out);
+static void matched_Op(const wchar_t *buffer, SymbolType type, DgyStack *out);
+static void matched_Word(const wchar_t *buffer, SymbolType type, DgyStack *out);
+static void matched_Cell(const wchar_t *buffer, SymbolType type, DgyStack *out);
 
-static i32 (*_matchSymbol[SYM_CNT])(FILE *, wint_t, wchar_t *) =
-{
-        /* Must be the same order of _matchedProcess. */
-        sym_Immd,
-        sym_Str,
-        sym_Comment,
-        sym_Reserved,
-        sym_Op,
-        sym_Word,
-        sym_Cell,
+static i32 (*_matchSymbol[SYM_CNT])(FILE *, wint_t, wchar_t *) = {
+    /* Must be the same order of _matchedProcess. */
+    sym_Immd,
+    sym_Str,
+    sym_Comment,
+    sym_Reserved,
+    sym_Op,
+    sym_Word,
+    sym_Cell,
 };
 
-static void (*_matchedProcess[SYM_CNT])(const wchar_t[], SymbolType, DgyStack *) =
-{
-        /* Must be the same order of _matchSymbol. */
-        matched_Immd,
-        matched_Str,
-        matched_Comment,
-        matched_Reserved,
-        matched_Op,
-        matched_Word,
-        matched_Cell,
+static void (*_matchedProcess[SYM_CNT])(const wchar_t *, SymbolType, DgyStack *) = {
+    /* Must be the same order of _matchSymbol. */
+    matched_Immd,
+    matched_Str,
+    matched_Comment,
+    matched_Reserved,
+    matched_Op,
+    matched_Word,
+    matched_Cell,
 };
 
-static const wchar_t *_reservedSymTable[RESERVED_SYM_CNT] =
-{
-        // Must be sorted in descending order of length
-        L"重复执行",            /* S_CHONG_FU_ZHI_XING */
-        L"否则结束",            /* S_FOU_ZE_JIE_SHU */
-        L"结果存",              /* S_JIE_GUO_CUN */
-        L"无结果",              /* S_WU_JIE_GUO */
-        L"不成立",              /* S_BU_CHENG_LI */
-        L"无条件",              /* S_WU_TIAO_JIAN */
-        L"这里是",              /* S_ZHE_LI_SHI */
-        L"检测",                /* S_JIAN_CE */
-        L"条件",                /* S_TIAO_JIAN */
-        L"成立",                /* S_CHENG_LI */
-        L"直到",                /* S_ZHI_DAO */
-        L"否则",                /* S_FOU_ZE */
-        L"如果",                /* S_RU_GUO */
-        L"存",                  /* S_CUN */
-        L"到",                  /* S_DAO */
-        L"令",                  /* S_LING */
-        L"求",                  /* S_QIU */
-        L"去",                  /* S_QU */
-        L"就",                  /* S_JIU */
-        L"设",                  /* S_SHE */
-        L"次",                  /* S_CI */
+static const wchar_t *_reservedSymTable[RESERVED_SYM_CNT] = {
+    // Must be sorted in descending order of length
+    L"重复执行", /* S_CHONG_FU_ZHI_XING */
+    L"否则结束", /* S_FOU_ZE_JIE_SHU */
+    L"结果存",   /* S_JIE_GUO_CUN */
+    L"无结果",   /* S_WU_JIE_GUO */
+    L"不成立",   /* S_BU_CHENG_LI */
+    L"无条件",   /* S_WU_TIAO_JIAN */
+    L"这里是",   /* S_ZHE_LI_SHI */
+    L"检测",     /* S_JIAN_CE */
+    L"条件",     /* S_TIAO_JIAN */
+    L"成立",     /* S_CHENG_LI */
+    L"直到",     /* S_ZHI_DAO */
+    L"否则",     /* S_FOU_ZE */
+    L"如果",     /* S_RU_GUO */
+    L"存",       /* S_CUN */
+    L"到",       /* S_DAO */
+    L"令",       /* S_LING */
+    L"求",       /* S_QIU */
+    L"去",       /* S_QU */
+    L"就",       /* S_JIU */
+    L"设",       /* S_SHE */
+    L"次",       /* S_CI */
 };
 
-static const wchar_t * _opSymTable[OP_SYM_CNT] =
-{
-        // Must be sorted in descending order of length
-        L"<=",                  /* S_BEQ */
-        L">=",                  /* S_AEQ */
-        L"/=",                  /* S_NEQ */
-        L"<",                   /* S_BELOW */
-        L">",                   /* S_ABOVE */
-        L"=",                   /* S_EQ */
-        L"且",                  /* S_AND */
-        L"或",                  /* S_OR */
-        L"非",                  /* S_NOT */
-        L"/",                  /* S_SLASH */
-        L"\\",                 /* S_BACKSLASH */
-        L"~",                  /* S_TILDE */
+static const wchar_t *_opSymTable[OP_SYM_CNT] = {
+    // Must be sorted in descending order of length
+    L"<=", /* S_BEQ */
+    L">=", /* S_AEQ */
+    L"/=", /* S_NEQ */
+    L"<",  /* S_BELOW */
+    L">",  /* S_ABOVE */
+    L"=",  /* S_EQ */
+    L"且", /* S_AND */
+    L"或", /* S_OR */
+    L"非", /* S_NOT */
+    L"/",  /* S_SLASH */
+    L"\\", /* S_BACKSLASH */
+    L"~",  /* S_TILDE */
 };
 
 static wint_t getWideChar(wint_t *wc, FILE *in)
@@ -375,7 +371,7 @@ end:
                 wprintf(L"%ls: ", symName);
                 wprintf(ERR_INVALID_SYMBOL("\\n"));
                 break;
-        case STR_END:                
+        case STR_END:
                 if (bufIdx == 1)
                         matched = S_CHAR;
                 else
@@ -685,13 +681,13 @@ static SymbolType sym_Cell(FILE *in, wint_t wc, wchar_t *buffer)
                 END,
         };
         static const SymbolType matchedType[2][2] =
-        {
-                { S_WORD_REG, S_IMMD_REG },
-                { S_WORD_CELL, S_IMMD_CELL },
-        };
+            {
+                {S_WORD_REG, S_IMMD_REG},
+                {S_WORD_CELL, S_IMMD_CELL},
+            };
         static const wchar_t *symName = L"<单元/寄存器>";
         SymbolType matched = S_UNDEFINED;
-        i32 isReg = 0; // Flag of Register
+        i32 isReg = 0;  // Flag of Register
         i32 isImmd = 0; // Flag of immediate number
         i32 status = START;
         enum
@@ -749,21 +745,21 @@ end:
         return matched;
 }
 
-static void matched_Immd(const wchar_t buffer[], SymbolType type, DgyStack *out)
+static void matched_Immd(const wchar_t *buffer, SymbolType type, DgyStack *out)
 {
         i64 immd = wcstoll(buffer, NULL, 0);
-        cell_t data = {.data.sint=immd, .type=CELL_LEXER_IMMD};
+        cell_t data = {.data.sint = immd, .type = CELL_LEXER_IMMD};
         dgyStackPush(out, data);
 }
 
-static void matched_Str(const wchar_t buffer[], SymbolType type, DgyStack *out)
+static void matched_Str(const wchar_t *buffer, SymbolType type, DgyStack *out)
 {
         if (type == S_CHAR)
         {
-                cell_t data = {.data.wchar=buffer[0], .type=CELL_LEXER_CHAR};
+                cell_t data = {.data.wchar = buffer[0], .type = CELL_LEXER_CHAR};
                 dgyStackPush(out, data);
-                cell_t len = {.data.sint=1, .type=CELL_FLAG_LEN};
-                dgyStackPush(out, len);                
+                cell_t len = {.data.sint = 1, .type = CELL_FLAG_LEN};
+                dgyStackPush(out, len);
         }
         else
         {
@@ -771,34 +767,33 @@ static void matched_Str(const wchar_t buffer[], SymbolType type, DgyStack *out)
                 for (i = 0; buffer[i] != L'\0' && i < MAX_STR_LEN; ++i)
                 {
                         cell_t data = {
-                                .data.wchar=buffer[i],
-                                .type=CELL_LEXER_STR
-                        };
+                            .data.wchar = buffer[i],
+                            .type = CELL_LEXER_STR};
                         dgyStackPush(out, data);
                 }
-                cell_t len = {.data.sint=i, .type=CELL_FLAG_LEN};
+                cell_t len = {.data.sint = i, .type = CELL_FLAG_LEN};
                 dgyStackPush(out, len);
         }
 }
 
-static void matched_Comment(const wchar_t buffer[], SymbolType type, DgyStack *out)
+static void matched_Comment(const wchar_t *buffer, SymbolType type, DgyStack *out)
 {
         // Dummy
 }
 
-static void matched_Reserved(const wchar_t buffer[], SymbolType type, DgyStack *out)
+static void matched_Reserved(const wchar_t *buffer, SymbolType type, DgyStack *out)
 {
-        cell_t data = {.data.sint=type, .type=CELL_LEXER_RESERVED};
+        cell_t data = {.data.sint = type, .type = CELL_LEXER_RESERVED};
         dgyStackPush(out, data);
 }
 
-static void matched_Op(const wchar_t buffer[], SymbolType type, DgyStack *out)
+static void matched_Op(const wchar_t *buffer, SymbolType type, DgyStack *out)
 {
-        cell_t data = {.data.sint=type, .type=CELL_LEXER_OP};
-        dgyStackPush(out, data);        
+        cell_t data = {.data.sint = type, .type = CELL_LEXER_OP};
+        dgyStackPush(out, data);
 }
 
-static void matched_Word(const wchar_t buffer[], SymbolType type, DgyStack *out)
+static void matched_Word(const wchar_t *buffer, SymbolType type, DgyStack *out)
 {
         CellType cellType;
         if (type == S_WORD)
@@ -814,20 +809,19 @@ static void matched_Word(const wchar_t buffer[], SymbolType type, DgyStack *out)
                 wprintf(L"dgy_lexer: matched_Word failed.\n");
                 return;
         }
-        i32 i;        
+        i32 i;
         for (i = 0; buffer[i] != L'\0' && i < MAX_WORD_LEN; ++i)
-        {                
+        {
                 cell_t data = {
-                        .data.wchar=buffer[i],
-                        .type=cellType
-                };
+                    .data.wchar = buffer[i],
+                    .type = cellType};
                 dgyStackPush(out, data);
-        }        
-        cell_t len = {.data.sint=i, .type=CELL_FLAG_LEN};
-        dgyStackPush(out, len);        
+        }
+        cell_t len = {.data.sint = i, .type = CELL_FLAG_LEN};
+        dgyStackPush(out, len);
 }
 
-static void matched_Cell(const wchar_t buffer[], SymbolType type, DgyStack *out)
+static void matched_Cell(const wchar_t *buffer, SymbolType type, DgyStack *out)
 {
         CellType cellType;
         switch (type)
@@ -839,7 +833,7 @@ static void matched_Cell(const wchar_t buffer[], SymbolType type, DgyStack *out)
                 cellType = CELL_LEXER_WORD_REG;
                 break;
         case S_IMMD_CELL:
-                cellType = CELL_LEXER_IMMD_CELL;                
+                cellType = CELL_LEXER_IMMD_CELL;
                 break;
         case S_IMMD_REG:
                 cellType = CELL_LEXER_IMMD_REG;
@@ -853,21 +847,20 @@ static void matched_Cell(const wchar_t buffer[], SymbolType type, DgyStack *out)
         {
                 i32 i;
                 for (i = 0; buffer[i] != L'\0' && i < MAX_WORD_LEN; ++i)
-                {                
+                {
                         cell_t data = {
-                                .data.wchar=buffer[i],
-                                .type=cellType
-                        };
+                            .data.wchar = buffer[i],
+                            .type = cellType};
                         dgyStackPush(out, data);
-                }        
-                cell_t len = {.data.sint=i, .type=CELL_FLAG_LEN};
-                dgyStackPush(out, len);                
+                }
+                cell_t len = {.data.sint = i, .type = CELL_FLAG_LEN};
+                dgyStackPush(out, len);
         }
         else
         {
                 i64 immd = wcstoll(buffer, NULL, 0);
-                cell_t data = {.data.sint=immd, .type=cellType};
-                dgyStackPush(out, data);                
+                cell_t data = {.data.sint = immd, .type = cellType};
+                dgyStackPush(out, data);
         }
 }
 
