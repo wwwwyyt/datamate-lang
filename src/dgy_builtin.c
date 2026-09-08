@@ -13,14 +13,14 @@ static void inline addBuiltin(BuiltinCode code,
         builtin.data.sint = code;
         _builtins[code] = _builtin;
         dgyDictAdd(wordDict, name, codeStack->sp, 0);
-        dgyStackPush(codeStack, builtin);        
+        dgyStackPush(codeStack, builtin);
 }
 
 static ErrCode stackCheck(DgyStack *dataStack,
                           const wchar_t *funcName,
                           i32 argCnt)
 {
-        const int bp = dataStack->sp - argCnt;        
+        const int bp = dataStack->sp - argCnt;
         if (bp < 0)
         {
                 dgySetErr(ERR_UNDERFLOW, funcName);
@@ -30,16 +30,16 @@ static ErrCode stackCheck(DgyStack *dataStack,
 }
 
 static void stackReturn(DgyStack *dataStack,
-                           const wchar_t *funcName,
-                           i32 argCnt,
-                           i32 retCnt)
+                        const wchar_t *funcName,
+                        i32 argCnt,
+                        i32 retCnt)
 {
         for (i32 i = 0; i < argCnt - retCnt; ++i)
         {
                 if (CODE_FAILURE == dgyStackPop(dataStack))
                 {
                         wprintf(L"%ls: ", funcName);
-                        dgyGetErr();       
+                        dgyGetErr();
                 }
         }
 }
@@ -64,7 +64,7 @@ static void sintsub(DgyStack *dataStack)
 {
         i32 argCnt = 2;
         i32 retCnt = 1;
-        const wchar_t *funcName =  L"dgy_builtin: sintsub";
+        const wchar_t *funcName = L"dgy_builtin: sintsub";
         if (CODE_SUCCESS == stackCheck(dataStack,
                                        funcName,
                                        argCnt))
@@ -119,7 +119,7 @@ ErrCode dgyBuiltinInit(DgyStack *codeStack, DgyDict *wordDict)
         addBuiltin(BW_SINT_SUB, L"相减", sintsub, codeStack, wordDict);
         addBuiltin(BW_SINT_MUL, L"相乘", sintmul, codeStack, wordDict);
         addBuiltin(BW_SINT_DIV, L"相整除", sintdiv, codeStack, wordDict);
-        
+
         return CODE_SUCCESS;
 }
 

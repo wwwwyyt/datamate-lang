@@ -7,7 +7,8 @@ static ErrCode resize(size_t newSize, DgyDict *dict)
                 dgySetErr(ERR_NULLPTR, L"dgy_dict: resize");
                 return CODE_FAILURE;
         }
-        DictItem *newDict = (DictItem *)realloc(dict->dict, newSize * sizeof(DictItem)); // Allocate DgyDict.dict
+        // 分配空间 - DgyDict.dict
+        DictItem *newDict = (DictItem *)realloc(dict->dict, newSize * sizeof(DictItem));
         if (newDict == NULL)
         {
                 perror("dgy_dict: resize: realloc() failed");
@@ -24,7 +25,7 @@ ErrCode dgyDictInit(DgyDict *dict, size_t size)
         {
                 dgySetErr(ERR_NULLPTR, L"dgyDictInit");
                 return CODE_FAILURE;
-        }        
+        }
         memset(dict, 0, sizeof(DgyDict));
         dict->size = size;
         dict->top = 0;
@@ -46,7 +47,8 @@ ErrCode dgyDictAdd(DgyDict *dict, const wchar_t *name, i32 entry, i32 level)
         }
         size_t nameLen = wcslen(name);
         DictItem newItem;
-        newItem.name = (wchar_t *)malloc(nameLen * sizeof(wchar_t)); // Allocate DictItem.name
+        // 分配空间 - DictItem.name
+        newItem.name = (wchar_t *)malloc(nameLen * sizeof(wchar_t));
         wcscpy(newItem.name, name);
         newItem.entry = entry;
         newItem.level = level;
@@ -70,7 +72,7 @@ static i32 searchItemByEntry(const DgyDict *dict, i32 entry)
                         break;
                 }
         }
-        return itemIdx;        
+        return itemIdx;
 }
 
 i32 dgyDictSearchIn(const DgyDict *dict, const wchar_t *name, i32 parentEntry)
@@ -92,7 +94,7 @@ i32 dgyDictSearchIn(const DgyDict *dict, const wchar_t *name, i32 parentEntry)
                                 entry = item.entry;
                                 break;
                         }
-                }          
+                }
         }
         else if (parentEntry >= 0)
         {
@@ -150,13 +152,15 @@ ErrCode dgyDictDestroy(DgyDict *dict)
         {
                 dgySetErr(ERR_NULLPTR, L"dgyDictDestroy");
                 return CODE_FAILURE;
-        }                
+        }
         for (i32 i = 0; i < dict->top; ++i)
         {
-                free(dict->dict[i].name); // Free DictItem.name
+                // 释放空间 - DictItem.name
+                free(dict->dict[i].name);
                 memset(&(dict->dict[i]), 0, sizeof(DictItem));
         }
-        free(dict->dict); // Free DgyDict.dict
+        // 释放空间 - DgyDict.dict
+        free(dict->dict);
         memset(dict, 0, sizeof(DgyDict));
         return CODE_SUCCESS;
 }

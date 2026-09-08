@@ -6,7 +6,6 @@
 #include "dgy_stack.h"
 #include "dgy_dict.h"
 #include "dgy_parser.h"
-#include "dgy_analyser.h"
 #include "dgy_builtin.h"
 
 typedef struct

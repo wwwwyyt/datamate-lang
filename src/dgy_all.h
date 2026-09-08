@@ -19,7 +19,7 @@ typedef uint8_t u8;
 
 typedef enum
 {
-        CELL_FLAG_LEN,
+        CELL_FLAG_LEN, /* 用于在 symbol stack 中存储多单元符号长度 */
 
         CELL_LEXER_IMMD,
         CELL_LEXER_STR,

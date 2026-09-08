@@ -23,7 +23,7 @@ static void matched_Word(const wchar_t *buffer, SymbolType type, DgyStack *out);
 static void matched_Cell(const wchar_t *buffer, SymbolType type, DgyStack *out);
 
 static i32 (*_matchSymbol[SYM_CNT])(FILE *, wint_t, wchar_t *) = {
-    /* Must be the same order of _matchedProcess. */
+    /* 必须与 _matchedProcess 中的元素顺序相同 */
     sym_Immd,
     sym_Str,
     sym_Comment,
@@ -34,7 +34,7 @@ static i32 (*_matchSymbol[SYM_CNT])(FILE *, wint_t, wchar_t *) = {
 };
 
 static void (*_matchedProcess[SYM_CNT])(const wchar_t *, SymbolType, DgyStack *) = {
-    /* Must be the same order of _matchSymbol. */
+    /* 必须与 _matchSymbol 中的元素顺序相同 */
     matched_Immd,
     matched_Str,
     matched_Comment,
@@ -45,7 +45,7 @@ static void (*_matchedProcess[SYM_CNT])(const wchar_t *, SymbolType, DgyStack *)
 };
 
 static const wchar_t *_reservedSymTable[RESERVED_SYM_CNT] = {
-    // Must be sorted in descending order of length
+    // 必须按长度降序排序
     L"重复执行", /* S_CHONG_FU_ZHI_XING */
     L"否则结束", /* S_FOU_ZE_JIE_SHU */
     L"结果存",   /* S_JIE_GUO_CUN */
@@ -70,7 +70,7 @@ static const wchar_t *_reservedSymTable[RESERVED_SYM_CNT] = {
 };
 
 static const wchar_t *_opSymTable[OP_SYM_CNT] = {
-    // Must be sorted in descending order of length
+    // 必须按长度降序排序
     L"<=", /* S_BEQ */
     L">=", /* S_AEQ */
     L"/=", /* S_NEQ */
@@ -93,9 +93,9 @@ static wint_t getWideChar(wint_t *wc, FILE *in)
                 if (ferror(in))
                 {
                         if (errno == EILSEQ)
-                                wprintf(L"Character encoding error while reading.\n");
+                                wprintf(L"读取字符时编码错误\n");
                         else
-                                wprintf(L"I/O error when reading\n");
+                                wprintf(L"读取字符时 I/O 错误\n");
                 }
         }
         return *wc;
@@ -117,13 +117,13 @@ static bool isCharAt(wchar_t wc, const wchar_t *wcs, i32 idx)
 static bool isValidWordChar(wchar_t wc)
 {
         if ((wc >= 0x4E00 && wc <= 0x62FF) ||
-            (wc >= 0x7700 && wc <= 0x9FFF)) // Chinese character
+            (wc >= 0x7700 && wc <= 0x9FFF)) // 常用汉字
                 return 1;
-        else if (iswalpha(wc)) // English character
+        else if (iswalpha(wc)) // 英文字母
                 return 1;
         else if (iswdigit(wc)) // 0-9
                 return 1;
-        else if (wc == L'_') // underline
+        else if (wc == L'_') // 下划线
                 return 1;
         else
                 return 0;
@@ -187,7 +187,7 @@ static SymbolType sym_Immd(FILE *in, wint_t wc, wchar_t *buffer)
         }
         else
         {
-                goto end; // Not an immediate number
+                goto end; // 不是立即数
         }
         while (getWideChar(&wc, in) != WEOF)
         {
@@ -202,7 +202,7 @@ static SymbolType sym_Immd(FILE *in, wint_t wc, wchar_t *buffer)
                         else
                         {
                                 ungetWideChar(wc, in);
-                                goto end; // Expect digits
+                                goto end; // 期望数字
                         }
                         break;
                 case INT_2:
@@ -248,7 +248,7 @@ static SymbolType sym_Immd(FILE *in, wint_t wc, wchar_t *buffer)
                         else
                         {
                                 ungetWideChar(wc, in);
-                                goto end; // Expect xdigits
+                                goto end; // 期望十六进制数字
                         }
                         break;
                 case HEX_3:
@@ -471,7 +471,7 @@ static SymbolType sym_Reserved(FILE *in, wint_t wc, wchar_t *buffer)
 {
         i32 bufIdx = 0;
         i32 idx = 0;
-        SymbolType type = S_RESERVED_UNDEFINED; // Init with an invalid type
+        SymbolType type = S_RESERVED_UNDEFINED; // 以一个非法值初始化
         SymbolType matched = S_UNDEFINED;
         for (i32 i = 0; i < RESERVED_SYM_CNT; ++i)
         {
@@ -491,24 +491,24 @@ static SymbolType sym_Reserved(FILE *in, wint_t wc, wchar_t *buffer)
                                         }
                                         else
                                         {
-                                                goto while_end; // match failed
+                                                goto while_end; // 匹配失败
                                         }
                                 }
                                 else
                                 {
-                                        goto while_end; // match failed
+                                        goto while_end; // 匹配失败
                                 }
                         }
                 while_end:
-                        if (idx == length) // matched
+                        if (idx == length) // 匹配成功
                         {
                                 buffer[bufIdx++] = wc;
-                                if (getWideChar(&wc, in) == WEOF || iswspace(wc)) // check end
+                                if (getWideChar(&wc, in) == WEOF || iswspace(wc)) // 检查结尾 (空白字符或 EOF)
                                 {
                                         type = i;
                                         goto end;
                                 }
-                                else // check end failed
+                                else // 结尾不合法 (匹配失败)
                                 {
                                         while (bufIdx > 0)
                                         {
@@ -518,7 +518,7 @@ static SymbolType sym_Reserved(FILE *in, wint_t wc, wchar_t *buffer)
                                         continue;
                                 }
                         }
-                        else // unmatched (idx < length)
+                        else // 未匹配 (idx < length)
                         {
                                 while (bufIdx > 0)
                                 {
@@ -541,7 +541,7 @@ static SymbolType sym_Op(FILE *in, wint_t wc, wchar_t *buffer)
 {
         i32 bufIdx = 0;
         i32 idx = 0;
-        SymbolType type = S_OP_UNDEFINED; // Init with an invalid type
+        SymbolType type = S_OP_UNDEFINED; // 以一个非法值初始化
         SymbolType matched = S_UNDEFINED;
         for (i32 i = 0; i < OP_SYM_CNT; ++i)
         {
@@ -561,21 +561,21 @@ static SymbolType sym_Op(FILE *in, wint_t wc, wchar_t *buffer)
                                         }
                                         else
                                         {
-                                                goto while_end; // match failed
+                                                goto while_end; // 匹配失败
                                         }
                                 }
                                 else
                                 {
-                                        goto while_end; // match failed
+                                        goto while_end; // 匹配失败
                                 }
                         }
                 while_end:
-                        if (idx == length) // matched
+                        if (idx == length) // 匹配成功
                         {
                                 type = i;
                                 goto end;
                         }
-                        else // unmatched (idx < length)
+                        else // 匹配失败 (idx < length)
                         {
                                 while (bufIdx > 0)
                                 {
@@ -609,7 +609,7 @@ static SymbolType sym_Word(FILE *in, wint_t wc, wchar_t *buffer)
         i32 status = START;
         i32 bufIdx = 0;
         SymbolType matched = S_UNDEFINED;
-        i32 isExtern = 0; // Flag of Extern Word
+        i32 isExtern = 0; // 外部词语的标志
         i32 outOfBuf = 0;
         if ((!iswdigit(wc) && isValidWordChar(wc)) || wc == L'@')
         {
@@ -687,8 +687,8 @@ static SymbolType sym_Cell(FILE *in, wint_t wc, wchar_t *buffer)
             };
         static const wchar_t *symName = L"<单元/寄存器>";
         SymbolType matched = S_UNDEFINED;
-        i32 isReg = 0;  // Flag of Register
-        i32 isImmd = 0; // Flag of immediate number
+        i32 isReg = 0;  // 寄存器的标志
+        i32 isImmd = 0; // 立即数的标志
         i32 status = START;
         enum
         {
@@ -719,13 +719,13 @@ static SymbolType sym_Cell(FILE *in, wint_t wc, wchar_t *buffer)
                         else
                         {
                                 // status = CELL_2
-                                goto end; // Expect "Word" or "Immd"
+                                goto end; // 期望 <词语> 或 <立即数>
                         }
                 }
                 else
                 {
                         // status = CELL_1
-                        goto end; // Expect "Word" or "Immd"
+                        goto end; // 期望 <词语> 或 <立即数>
                 }
         }
         else
@@ -875,7 +875,7 @@ ErrCode dgyDoLexerOnce(FILE *in, DgyStack *out)
                 dgySetErr(ERR_NULLPTR, L"dgyDoLexerOnce");
                 return CODE_FAILURE;
         }
-        setlocale(LC_ALL, "zh_CN.utf8"); /* Set locale */
+        setlocale(LC_ALL, "zh_CN.utf8"); /* 重要: 设置地区为中文 */
         wint_t wc;
         wchar_t buffer[MAX_BUF_SIZE];
         for (; getWideChar(&wc, in) != WEOF;)

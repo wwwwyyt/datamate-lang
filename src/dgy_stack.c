@@ -133,6 +133,11 @@ ErrCode dgyStackClear(DgyStack *s)
         return CODE_SUCCESS;
 }
 
+/** @brief 用于在调试时以十六进制展示栈的内容
+ *  @param s 栈的对象
+ *  @param start 起始位置索引，小于 0 时从索引 0 处开始
+ *  @param end 结束位置索引，小于 0 时打印到栈顶前
+ */
 ErrCode dgyStackDump(const DgyStack *s, i32 start, i32 end)
 {
         if (!s)

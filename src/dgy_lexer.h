@@ -9,7 +9,7 @@ typedef enum
 {
         S_UNDEFINED = -1,
 
-        /* Main type */
+        /* 符号主类型 */
         S_IMMD = 0,
         S_STR,
         S_COMMENT,
@@ -19,15 +19,15 @@ typedef enum
         S_CELL,
         SYM_CNT,
 
-        /* Secondary type */
-        S_CHAR, /* String which length == 1 */
+        /* 符号次类型 */
+        S_CHAR, /* 长度为 1 的字符串 */
         S_EXTERN_WORD,
-        S_IMMD_CELL,        
+        S_IMMD_CELL,
         S_IMMD_REG,
-        S_WORD_CELL,        
+        S_WORD_CELL,
         S_WORD_REG,
 
-        /* Reserved symbol type */
+        /* 保留字 符号类型 */
         S_RESERVED_UNDEFINED = -1,
         S_CHONG_FU_ZHI_XING = 0,
         S_FOU_ZE_JIE_SHU,
@@ -52,7 +52,7 @@ typedef enum
         S_CI,
         RESERVED_SYM_CNT,
 
-        /* Op symbol type */
+        /* 操作符 符号类型 */
         S_OP_UNDEFINED = -1,
         S_BEQ = 0,
         S_AEQ,

@@ -11,25 +11,14 @@ static void test_lexer(void)
 
 static void test_parser(void)
 {
-        DgyStack code;
-        dgyStackInit(&code, 16);
-
-        DgyDict word;
-        dgyDictInit(&word, 16);
-
-        dgyBuiltinInit(&code, &word);
-
         DgyParser parser;
-        dgyParserInit(&parser, &code, &word);
+        dgyParserInit(&parser);
+
+        dgyStackDump(&parser.symbolStack, 0, -1);
 
         dgyDoParserOnce(&parser, stdin);
-        dgyStackDump(&code, BUILTIN_CNT, -1);
-        dgyDoParserOnce(&parser, stdin);
-        dgyStackDump(&code, BUILTIN_CNT, -1);
 
         dgyParserDestroy(&parser);
-        dgyDictDestroy(&word);
-        dgyStackDestroy(&code);
 }
 
 void dgyUnitTest(void)
