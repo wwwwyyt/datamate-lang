@@ -6,9 +6,9 @@
 
 typedef struct
 {
-        cell_t *stack;          /* Shouldn't be directly modified */
-        i32 sp;                 /* Shouldn't be directly modified */
-        size_t size;            /* Shouldn't be directly modified */
+        cell_t *stack; /* 禁止直接修改 */
+        i32 sp;        /* 禁止直接修改 */
+        size_t size;   /* 禁止直接修改 */
 } DgyStack;
 
 ErrCode dgyStackInit(DgyStack *s, size_t size);
@@ -18,7 +18,7 @@ ErrCode dgyStackPop(DgyStack *s);
 ErrCode dgyStackPush(DgyStack *s, cell_t data);
 ErrCode dgyStackClear(DgyStack *s);
 
-/* They are read-only, so add "const". */
+/* 这些栈操作是只读的，因此添加 const */
 ErrCode dgyStackItemAt(const DgyStack *s, i32 idx, cell_t *data);
 ErrCode dgyStackTop(const DgyStack *s, cell_t *data);
 bool dgyStackIsEmpty(const DgyStack *s);

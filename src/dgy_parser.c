@@ -46,21 +46,21 @@ static const StatType _statType[] = {
 };
 
 static i32 (*_matchStatFuncList[])(DgyParser *, StatType *) = {
-    /* Must be the same order of statType[] */
-    /* e.g. _matchStatFuncList[ST_WORD_BEGIN] = match_WordBegin */
-    match_WordBegin, /* Word Declaration Begin */
-    match_WordEnd,   /* Word Declaration End */
-    match_Mov,       /* Move Value */
-    match_SimpWord,  /* Simple Word Declaration */
-    match_Exec,      /* Execute Word */
-    match_If,        /* Branch Begin */
-    match_Else,      /* Branch Else */
-    match_ElseEnd,   /* Branch End */
-    match_Hereis,    /* Set Label */
-    match_Goto,      /* Goto Label */
-    match_LoopBegin, /* Loop Begin */
-    match_LoopCheck, /* Loop Check */
-    match_LoopEnd,   /* Loop End */
+    /* 必须与 statType[] 的元素顺序相同 */
+    /* 例如 _matchStatFuncList[ST_WORD_BEGIN] 的值必须为 match_WordBegin */
+    match_WordBegin, /* Word Declaration Begin 复杂词语声明 开始 */
+    match_WordEnd,   /* Word Declaration End 复杂词语声明 结束 */
+    match_Mov,       /* Move Value 存值 */
+    match_SimpWord,  /* Simple Word Declaration 简单词语声明 */
+    match_Exec,      /* Execute Word 词语执行 */
+    match_If,        /* Branch Begin 条件分支 开始 */
+    match_Else,      /* Branch Else 条件分支 否则 */
+    match_ElseEnd,   /* Branch End  条件分支 结束 */
+    match_Hereis,    /* Set Label 设置标记 */
+    match_Goto,      /* Goto Label 跳转到标记 */
+    match_LoopBegin, /* Loop Begin 循环开始 */
+    match_LoopCheck, /* Loop Check 循环条件检查 */
+    match_LoopEnd,   /* Loop End 循环结束 */
 };
 
 static ErrCode getSymbol(FILE *in, DgyStack *symbolStack, DgyStack *analyStack)
@@ -71,20 +71,20 @@ static ErrCode getSymbol(FILE *in, DgyStack *symbolStack, DgyStack *analyStack)
                 dgyStackTop(symbolStack, &top);
                 if (CELL_FLAG_LEN == top.type)
                 {
-                        /* Multi-cell symbol */
+                        /* 多单元符号 */
                         /* cell = {
                             .data = (unused),
                             .type = CELL_LEXER_XXX
                         }
                         */
                         cell_t second;
-                        /* Get symbol's type */
+                        /* 获取符号类型 */
                         dgyStackItemAt(symbolStack, 2, &second);
                         dgyStackPush(analyStack, second);
                 }
                 else
                 {
-                        /* Single-cell symbol */
+                        /* 一单元符号 */
                         /* cell = {
                             .data = (symbol value),
                             .type = CELL_LEXER_XXX,
@@ -198,7 +198,7 @@ static i32 match_WordBegin(DgyParser *parser, StatType *matchedType)
         }
         switch (status)
         {
-        case 0: /* <Word> */
+        case 0: /* <词语> */
                 if (isWord(&sym))
                 {
                         status = 1;
@@ -212,7 +212,7 @@ static i32 match_WordBegin(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect "="
+                        // 期望 "="
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("="));
                         status = 0;
@@ -245,14 +245,14 @@ static i32 match_WordEnd(DgyParser *parser, StatType *matchedType)
                         *matchedType = ST_WORD_END;
                 }
                 break;
-        case 1: /* <Word> */
+        case 1: /* <词语> */
                 if (isWord(&sym))
                 {
                         status = MATCH_COMPLETED;
                 }
                 else
                 {
-                        // Expect <Word>
+                        // 期望 <词语>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<词语>"));
                         status = 0;
@@ -285,14 +285,14 @@ static i32 match_Mov(DgyParser *parser, StatType *matchedType)
                         *matchedType = ST_MOV;
                 }
                 break;
-        case 1: /* <Value> | <CellReg> */
+        case 1: /* <数值> | <单元/寄存器> */
                 if (isValue(&sym) || isCellReg(&sym))
                 {
                         status = 2;
                 }
                 else
                 {
-                        // Expect <Value> or <CellReg>
+                        // 期望 <数值> 或 <单元/寄存器>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<数值> 或 <单元/寄存器>"));
                         status = 0;
@@ -306,21 +306,21 @@ static i32 match_Mov(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect "到"
+                        // 期望 "到"
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("到"));
                         status = 0;
                         *matchedType = STATTYPE_UNDEFINED;
                 }
                 break;
-        case 3: /* <CellReg> | <Word> */
+        case 3: /* <单元> | <寄存器> */
                 if (isCellReg(&sym) || isWord(&sym))
                 {
                         status = MATCH_COMPLETED;
                 }
                 else
                 {
-                        // Expect <CellReg> or <Word>
+                        // 期望 <单元/寄存器> 或 <词语>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<单元/寄存器> 或 <词语>"));
                         status = 0;
@@ -353,14 +353,14 @@ static i32 match_SimpWord(DgyParser *parser, StatType *matchedType)
                         *matchedType = ST_SET_REG;
                 }
                 break;
-        case 1: /* <Word> */
+        case 1: /* <词语> */
                 if (isWord(&sym))
                 {
                         status = 2;
                 }
                 else
                 {
-                        // Expect <Word>
+                        // 期望 <词语>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<词语>"));
                         status = 0;
@@ -374,14 +374,14 @@ static i32 match_SimpWord(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect "="
+                        // 期望 "="
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("="));
                         status = 0;
                         *matchedType = STATTYPE_UNDEFINED;
                 }
                 break;
-        case 3: /* <CellReg> | <Value> | <Word> | <ExternWord> */
+        case 3: /* <单元/寄存器> | <数值> | <词语> | <外部词语> */
                 if (isCellReg(&sym) ||
                     isValue(&sym) ||
                     isWord(&sym) ||
@@ -391,7 +391,7 @@ static i32 match_SimpWord(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect <CellReg> | <Value> | <Word> | <ExternWord>
+                        // 期望 <单元/寄存器> | <数值> | <词语> | <外部词语>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<单元/寄存器> 或 <数值> 或 <词语> 或 <外部词语>"));
                         status = 0;
@@ -425,7 +425,7 @@ static i32 match_Exec(DgyParser *parser, StatType *matchedType)
                         *matchedType = ST_EXEC;
                 }
                 break;
-        case 1: /* {<Value> | <ExternWord> | <Str> | <CellReg>} ("结果存" | "无结果") */
+        case 1: /* {<数值> | <外部词语> | <字符串> | <单元/寄存器>} ("结果存" | "无结果") */
                 if (isValue(&sym) ||
                     isExternWord(&sym) ||
                     isStr(&sym) ||
@@ -443,21 +443,21 @@ static i32 match_Exec(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect "结果存" or "无结果"
+                        // 期望 "结果存" 或 "无结果"
                         wprintf(L"%ls: ", statName);
-                        wprintf(ERR_EXPECT_SYMBOL("'结果存' or '无结果'"));
+                        wprintf(ERR_EXPECT_SYMBOL("'结果存' 或 '无结果'"));
                         status = 0;
                         *matchedType = STATTYPE_UNDEFINED;
                 }
                 break;
-        case 2: /* <CellReg> | <Word> */
+        case 2: /* <单元/寄存器> | <词语> */
                 if (isCellReg(&sym) || isWord(&sym))
                 {
                         status = MATCH_COMPLETED;
                 }
                 else
                 {
-                        // Expect <CellReg> or <Word>
+                        // 期望 <单元/寄存器> 或 <词语>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<单元/寄存器> 或 <词语>"));
                         status = 0;
@@ -490,21 +490,21 @@ static i32 match_If(DgyParser *parser, StatType *matchedType)
                         *matchedType = ST_IF;
                 }
                 break;
-        case 1: /* <Value> | <CellReg> */
+        case 1: /* <数值> | <单元/寄存器> */
                 if (isValue(&sym) || isCellReg(&sym))
                 {
                         status = 2;
                 }
                 else
                 {
-                        // Expect <Value> or <CellReg>
+                        // 期望 <数值> 或 <单元/寄存器>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<数值> 或 <单元寄存器>"));
                         status = 0;
                         *matchedType = STATTYPE_UNDEFINED;
                 }
                 break;
-        case 2: /* <Relational Op> | <Logical Op> | "就"*/
+        case 2: /* <关系操作符> | <逻辑操作符> | "就"*/
                 if (isRelationalOp(&sym) || isLogicalOp(&sym))
                 {
                         status = 1;
@@ -515,7 +515,7 @@ static i32 match_If(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect <Relational Op> or <Logical Op> or "就"
+                        // 期望 <关系操作符> 或 <逻辑操作符> 或 "就"
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<关系运算符> 或 <逻辑运算符> 或 '就'"));
                         status = 0;
@@ -605,7 +605,7 @@ static i32 match_Hereis(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect <Word>
+                        // 期望 <词语>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<词语>"));
                         status = 0;
@@ -645,7 +645,7 @@ static i32 match_Goto(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect <Word>
+                        // 期望 <词语>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<词语>"));
                         status = 0;
@@ -703,21 +703,21 @@ static i32 match_LoopCheck(DgyParser *parser, StatType *matchedType)
                         *matchedType = ST_LOOP_CHECK;
                 }
                 break;
-        case 1: /* <Value> | <CellReg> */
+        case 1: /* <数值> | <单元/寄存器> */
                 if (isValue(&sym) || isCellReg(&sym))
                 {
                         status = 2;
                 }
                 else
                 {
-                        // Expect <Value> or <CellReg>
+                        // 期望 <数值> 或 <单元/寄存器>
                         wprintf(L"%ls: ", statName);
-                        wprintf(ERR_EXPECT_SYMBOL("<Value> or <CellReg>"));
+                        wprintf(ERR_EXPECT_SYMBOL("<数值> 或 <单元/寄存器>"));
                         status = 0;
                         *matchedType = STATTYPE_UNDEFINED;
                 }
                 break;
-        case 2: /* <Relational Op> | <Logical Op> | "条件"*/
+        case 2: /* <关系操作符> | <逻辑操作符> | "条件"*/
                 if (isRelationalOp(&sym) || isLogicalOp(&sym))
                 {
                         status = 1;
@@ -728,7 +728,7 @@ static i32 match_LoopCheck(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect <Relational Op> or <Logical Op> or "条件"
+                        // 期望 <关系操作符> 或 <逻辑操作符> 或 "条件"
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("<关系运算符> 或 <逻辑运算符> 或 '条件'"));
                         status = 0;
@@ -773,7 +773,7 @@ static i32 match_LoopEnd(DgyParser *parser, StatType *matchedType)
                 {
                         status = MATCH_COMPLETED;
                 }
-                /* <Immd> | <Word> | <ExternWord> */
+                /* <立即数> | <词语> | <外部词语> */
                 else if (isImmd(&sym) ||
                          isWord(&sym) ||
                          isExternWord(&sym))
@@ -782,7 +782,7 @@ static i32 match_LoopEnd(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect "成立" or "不成立" or <Value>
+                        // 期望 "成立" 或 "不成立" 或 <数值>
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("'成立' 或 '不成立' 或 <数值>"));
                         status = 0;
@@ -796,7 +796,7 @@ static i32 match_LoopEnd(DgyParser *parser, StatType *matchedType)
                 }
                 else
                 {
-                        // Expect "次"
+                        // 期望 "次"
                         wprintf(L"%ls: ", statName);
                         wprintf(ERR_EXPECT_SYMBOL("'次'"));
                         status = 0;
@@ -872,9 +872,9 @@ ErrCode dgyParserInit(DgyParser *parser)
                 dgySetErr(ERR_NULLPTR, L"dgyParserInit");
                 return CODE_FAILURE;
         }
-        /* Create analyStack */
+        /* 创建 分析栈 */
         dgyStackInit(&(parser->analyStack), 16);
-        /* Create symbolStack */
+        /* 创建 符号栈 */
         dgyStackInit(&(parser->symbolStack), 16);
         return CODE_SUCCESS;
 }
@@ -886,9 +886,9 @@ ErrCode dgyParserDestroy(DgyParser *parser)
                 dgySetErr(ERR_NULLPTR, L"dgyParserDestroy");
                 return CODE_FAILURE;
         }
-        /* Destroy symbolStack */
+        /* 销毁 分析栈 */
         dgyStackDestroy(&(parser->analyStack));
-        /* Destroy symbolStack */
+        /* 销毁 符号栈 */
         dgyStackDestroy(&(parser->symbolStack));
         memset(parser, 0, sizeof(DgyParser));
         return CODE_SUCCESS;

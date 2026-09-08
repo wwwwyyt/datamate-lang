@@ -33,12 +33,10 @@ typedef enum
 
 typedef struct
 {
-        /** @brief Used for grammar analysis,
-         * only stores symbol types */
+        /** @brief 用于语法分析，仅保存符号类型 */
         DgyStack analyStack;
 
-        /** @brief Used for lexical analysis,
-         * storing complete symbol information  */
+        /** @brief 用于存储词法分析返回的符号信息 */
         DgyStack symbolStack;
 } DgyParser;
 
