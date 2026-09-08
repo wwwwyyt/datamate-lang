@@ -832,6 +832,8 @@ ErrCode dgyDoParserOnce(DgyParser *parser, FILE *in)
                  *symbolStack = &(parser->symbolStack);
         StatType matchedType = STATTYPE_UNDEFINED;
         bool matched = false;
+        // 清空符号栈
+        dgyStackClear(symbolStack);
         while (CODE_SUCCESS == getSymbol(in, symbolStack, analyStack))
         {
                 if (matchedType == STATTYPE_UNDEFINED)

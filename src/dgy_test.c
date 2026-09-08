@@ -13,11 +13,8 @@ static void test_parser(void)
 {
         DgyParser parser;
         dgyParserInit(&parser);
-
-        dgyStackDump(&parser.symbolStack, 0, -1);
-
         dgyDoParserOnce(&parser, stdin);
-
+        dgyStackDump(&parser.symbolStack, 0, -1);
         dgyParserDestroy(&parser);
 }
 

@@ -166,6 +166,7 @@ ErrCode dgyStackDump(const DgyStack *s, i32 start, i32 end)
                 si = start;
                 ei = end;
         }
+        wprintf(L"-----打印栈-----\n");
         for (i32 i = si; i < ei; ++i)
         {
                 if (i >= 0 && i < s->size)
@@ -179,5 +180,6 @@ ErrCode dgyStackDump(const DgyStack *s, i32 start, i32 end)
                 }
         }
         wprintf(L"\n");
+        wprintf(L"----------------");
         return CODE_SUCCESS;
 }
