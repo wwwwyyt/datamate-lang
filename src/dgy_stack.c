@@ -1,5 +1,4 @@
 #include "dgy_stack.h"
-#include "dgy_error.h"
 
 ErrCode dgyStackInit(DgyStack *s, size_t size)
 {
@@ -13,7 +12,7 @@ ErrCode dgyStackInit(DgyStack *s, size_t size)
         s->stack = (cell_t *)malloc(s->size * sizeof(cell_t));
         if (s->stack == NULL)
         {
-                perror("dgyStackInit: malloc() failed");
+                fwprintf(stderr, L"dgyStackInit: malloc() failed: %ls\n", strerror(errno));
                 return CODE_FAILURE;
         }
         return CODE_SUCCESS;
@@ -29,7 +28,7 @@ ErrCode dgyStackResize(DgyStack *s, size_t newSize)
         cell_t *newStack = (cell_t *)realloc(s->stack, newSize * sizeof(cell_t));
         if (newStack == NULL)
         {
-                perror("dgyStackResize: realloc() failed");
+                fwprintf(stderr, L"dgyStackResize: realloc() failed: %ls\n", strerror(errno));
                 return CODE_FAILURE;
         }
         s->stack = newStack;
@@ -86,25 +85,40 @@ ErrCode dgyStackPush(DgyStack *s, cell_t data)
         return CODE_SUCCESS;
 }
 
-ErrCode dgyStackItemAt(const DgyStack *s, i32 idx, cell_t *data)
+ErrCode dgyStackGetItemAt(const DgyStack *s, i32 idx, cell_t *data, i32 *absi)
 {
         if (!s)
         {
-                dgySetErr(ERR_NULLPTR, L"dgyStackItemAt");
+                dgySetErr(ERR_NULLPTR, L"dgyStackGetItemAt");
                 return CODE_FAILURE;
         }
-        if (s->sp - idx < 0)
+        if (idx >= 0)
         {
-                dgySetErr(ERR_OUT_OF_BOUNDS, L"dgyStackItemAt");
+                *data = s->stack[idx];
+                if (absi)
+                {
+                        *absi = idx;
+                }
+        }
+        else if (s->sp + idx + 1 >= 0)
+        {
+                *data = s->stack[s->sp + idx + 1];
+                if (absi)
+                {
+                        *absi = s->sp + idx + 1;
+                }
+        }
+        else
+        {
+                dgySetErr(ERR_OUT_OF_BOUNDS, L"dgyStackGetItemAt");
                 return CODE_FAILURE;
         }
-        *data = s->stack[s->sp - idx];
         return CODE_SUCCESS;
 }
 
 ErrCode dgyStackTop(const DgyStack *s, cell_t *data)
 {
-        return dgyStackItemAt(s, 1, data);
+        return dgyStackGetItemAt(s, -1, data, NULL);
 }
 
 bool dgyStackIsEmpty(const DgyStack *s)

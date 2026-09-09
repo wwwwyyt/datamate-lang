@@ -1,7 +1,10 @@
 #ifndef _dgy_dict_h
 #define _dgy_dict_h
 
-#include "dgy_all.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "dgy_type.h"
 #include "dgy_error.h"
 
 typedef struct

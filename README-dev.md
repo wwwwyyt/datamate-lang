@@ -268,7 +268,7 @@ DGY 是一门用于计算机教学的，以 Forth 为灵感的中文编程语言
 FILE *fp = fopen(fname, "r");
 if (!fp)
 {
-        perror("fdgyDoParser: fopen() failed");
+        fwprintf(stderr, L"fdgyDoParser: fopen() failed: %ls\n", strerror(errno));
         return CODE_FAILURE;
 }
 ```
@@ -279,7 +279,7 @@ if (!fp)
 DictItem *newDict = (DictItem *)realloc(dict->dict, newSize * sizeof(DictItem));
 if (newDict == NULL)
 {
-        perror("dgy_dict: resize: realloc() failed");
+        fwprintf(stderr, "dgy_dict: resize: realloc() failed: %ls\n", strerror(errno));
         return CODE_FAILURE;
 }
 ```

@@ -1,7 +1,11 @@
 #ifndef _dgy_lexer_h
 #define _dgy_lexer_h
 
-#include "dgy_all.h"
+#include <stdio.h>
+#include <wctype.h>
+#include <locale.h>
+#include "dgy_type.h"
+#include "dgy_cell.h"
 #include "dgy_error.h"
 #include "dgy_stack.h"
 
@@ -71,9 +75,9 @@ typedef enum
 
 enum
 {
-        MAX_IMMD_LEN = 20,
-        MAX_STR_LEN = 1024,
-        MAX_WORD_LEN = 1024,
+        S_MAX_IMMD_LEN = 20,   /* 最长数字长度 */
+        S_MAX_STR_LEN = 1024,  /* 最长字符串长度（不包括字符串的界定符、转义字符的反斜杠） */
+        S_MAX_WORD_LEN = 1024, /* 最长词语长度 */
 };
 
 ErrCode dgyDoLexerOnce(FILE *in, DgyStack *out);

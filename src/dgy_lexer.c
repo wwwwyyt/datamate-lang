@@ -1,7 +1,4 @@
 #include "dgy_lexer.h"
-#include "dgy_all.h"
-#include "dgy_error.h"
-#include "dgy_stack.h"
 
 static bool isCharAt(wchar_t wc, const wchar_t *wcs, i32 idx);
 static bool isValidWordChar(wchar_t wc);
@@ -163,7 +160,7 @@ static SymbolType sym_Immd(FILE *in, wint_t wc, wchar_t *buffer)
         };
         enum
         {
-                MAX_BUF_SIZE = MAX_IMMD_LEN,
+                MAX_BUF_SIZE = S_MAX_IMMD_LEN,
         };
         static const wchar_t *symName = L"<立即数>";
         SymbolType matched = S_UNDEFINED;
@@ -318,7 +315,7 @@ static SymbolType sym_Str(FILE *in, wint_t wc, wchar_t *buffer)
         };
         enum
         {
-                MAX_BUF_SIZE = MAX_STR_LEN,
+                MAX_BUF_SIZE = S_MAX_STR_LEN,
         };
         static const wchar_t *symName = L"<字符串>";
         SymbolType matched = S_UNDEFINED;
@@ -604,7 +601,7 @@ static SymbolType sym_Word(FILE *in, wint_t wc, wchar_t *buffer)
         };
         enum
         {
-                MAX_BUF_SIZE = MAX_WORD_LEN,
+                MAX_BUF_SIZE = S_MAX_WORD_LEN,
         };
         i32 status = START;
         i32 bufIdx = 0;
@@ -692,7 +689,7 @@ static SymbolType sym_Cell(FILE *in, wint_t wc, wchar_t *buffer)
         i32 status = START;
         enum
         {
-                MAX_BUF_SIZE = MAX_WORD_LEN + 2,
+                MAX_BUF_SIZE = S_MAX_WORD_LEN + 2,
         };
         if (wc == L'#' || wc == L'%')
         {
@@ -764,7 +761,7 @@ static void matched_Str(const wchar_t *buffer, SymbolType type, DgyStack *out)
         else
         {
                 i32 i;
-                for (i = 0; buffer[i] != L'\0' && i < MAX_STR_LEN; ++i)
+                for (i = 0; buffer[i] != L'\0' && i < S_MAX_STR_LEN; ++i)
                 {
                         cell_t data = {
                             .data.wchar = buffer[i],
@@ -810,7 +807,7 @@ static void matched_Word(const wchar_t *buffer, SymbolType type, DgyStack *out)
                 return;
         }
         i32 i;
-        for (i = 0; buffer[i] != L'\0' && i < MAX_WORD_LEN; ++i)
+        for (i = 0; buffer[i] != L'\0' && i < S_MAX_WORD_LEN; ++i)
         {
                 cell_t data = {
                     .data.wchar = buffer[i],
@@ -846,7 +843,7 @@ static void matched_Cell(const wchar_t *buffer, SymbolType type, DgyStack *out)
             CELL_LEXER_WORD_REG == cellType)
         {
                 i32 i;
-                for (i = 0; buffer[i] != L'\0' && i < MAX_WORD_LEN; ++i)
+                for (i = 0; buffer[i] != L'\0' && i < S_MAX_WORD_LEN; ++i)
                 {
                         cell_t data = {
                             .data.wchar = buffer[i],
@@ -868,7 +865,7 @@ ErrCode dgyDoLexerOnce(FILE *in, DgyStack *out)
 {
         enum
         {
-                MAX_BUF_SIZE = MAX_WORD_LEN
+                MAX_BUF_SIZE = S_MAX_WORD_LEN
         };
         if (!in || !out)
         {

@@ -11,7 +11,7 @@ static ErrCode resize(size_t newSize, DgyDict *dict)
         DictItem *newDict = (DictItem *)realloc(dict->dict, newSize * sizeof(DictItem));
         if (newDict == NULL)
         {
-                perror("dgy_dict: resize: realloc() failed");
+                wprintf(L"dgy_dict: resize: realloc() failed");
                 return CODE_FAILURE;
         }
         dict->dict = newDict;
@@ -32,7 +32,7 @@ ErrCode dgyDictInit(DgyDict *dict, size_t size)
         dict->dict = (DictItem *)malloc(dict->size * sizeof(DictItem));
         if (dict->dict == NULL)
         {
-                perror("dgyDictInit: malloc() failed");
+                fwprintf(stderr, L"dgyDictInit: malloc() failed: %ls\n", strerror(errno));
                 return CODE_FAILURE;
         }
         return CODE_SUCCESS;

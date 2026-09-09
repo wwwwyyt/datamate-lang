@@ -1,7 +1,9 @@
 #ifndef _dgy_error_h
 #define _dgy_error_h
 
-#include "dgy_all.h"
+#include <wchar.h>
+#include <errno.h>
+#include "dgy_type.h"
 
 #define ERR_UNCLOSED_SYMBOL(sym) \
         L"【错误】: 未闭合符号: '" sym "'\n"

@@ -1,6 +1,6 @@
 #include "dgy_parser.h"
 
-static ErrCode getSymbol(FILE *in, DgyStack *symbolStack, DgyStack *analyStack);
+static ErrCode getSymbol(FILE *in, DgyParser *parser);
 static inline bool isReserved(SymbolType type, cell_t *s);
 static inline bool isOp(SymbolType type, cell_t *s);
 static inline bool isWord(cell_t *s);
@@ -33,7 +33,7 @@ static const StatType _statType[] = {
     ST_WORD_BEGIN,
     ST_WORD_END,
     ST_MOV,
-    ST_SET_REG,
+    ST_SIMP_WORD,
     ST_EXEC,
     ST_IF,
     ST_ELSE,
@@ -63,12 +63,15 @@ static i32 (*_matchStatFuncList[])(DgyParser *, StatType *) = {
     match_LoopEnd,   /* Loop End 循环结束 */
 };
 
-static ErrCode getSymbol(FILE *in, DgyStack *symbolStack, DgyStack *analyStack)
+static ErrCode getSymbol(FILE *in, DgyParser *parser)
 {
+        DgyStack *analyStack = &(parser->analyStack),
+                 *symbolStack = &(parser->symbolStack);
+        i32 *symbolIdx = &(parser->symbolIdx);
         if (CODE_SUCCESS == dgyDoLexerOnce(in, symbolStack))
         {
                 cell_t top;
-                dgyStackTop(symbolStack, &top);
+                dgyStackGetItemAt(symbolStack, -1, &top, symbolIdx);
                 if (CELL_FLAG_LEN == top.type)
                 {
                         /* 多单元符号 */
@@ -79,7 +82,7 @@ static ErrCode getSymbol(FILE *in, DgyStack *symbolStack, DgyStack *analyStack)
                         */
                         cell_t second;
                         /* 获取符号类型 */
-                        dgyStackItemAt(symbolStack, 2, &second);
+                        dgyStackGetItemAt(symbolStack, -2, &second, symbolIdx);
                         dgyStackPush(analyStack, second);
                 }
                 else
@@ -189,6 +192,8 @@ static i32 match_WordBegin(DgyParser *parser, StatType *matchedType)
         static const wchar_t *statName = L"词语声明开始";
         cell_t sym;
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
         if (MATCH_COMPLETED == status ||
@@ -203,12 +208,14 @@ static i32 match_WordBegin(DgyParser *parser, StatType *matchedType)
                 {
                         status = 1;
                         *matchedType = ST_WORD_BEGIN;
+                        statement->data.WordBegin.word = *symbolIdx;
                 }
                 break;
         case 1: /* "=" */
                 if (isOp(S_EQ, &sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->type = ST_WORD_BEGIN;
                 }
                 else
                 {
@@ -228,6 +235,8 @@ static i32 match_WordEnd(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"词语声明结束";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -249,6 +258,8 @@ static i32 match_WordEnd(DgyParser *parser, StatType *matchedType)
                 if (isWord(&sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->data.WordEnd.word = *symbolIdx;
+                        statement->type = ST_WORD_END;
                 }
                 else
                 {
@@ -268,6 +279,8 @@ static i32 match_Mov(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"存值语句";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -289,6 +302,7 @@ static i32 match_Mov(DgyParser *parser, StatType *matchedType)
                 if (isValue(&sym) || isCellReg(&sym))
                 {
                         status = 2;
+                        statement->data.Mov.src = *symbolIdx;
                 }
                 else
                 {
@@ -317,6 +331,8 @@ static i32 match_Mov(DgyParser *parser, StatType *matchedType)
                 if (isCellReg(&sym) || isWord(&sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->data.Mov.tar = *symbolIdx;
+                        statement->type = ST_MOV;
                 }
                 else
                 {
@@ -336,6 +352,8 @@ static i32 match_SimpWord(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"简单词语声明语句";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -350,13 +368,14 @@ static i32 match_SimpWord(DgyParser *parser, StatType *matchedType)
                 if (isReserved(S_SHE, &sym))
                 {
                         status = 1;
-                        *matchedType = ST_SET_REG;
+                        *matchedType = ST_SIMP_WORD;
                 }
                 break;
         case 1: /* <词语> */
                 if (isWord(&sym))
                 {
                         status = 2;
+                        statement->data.SimpWord.word = *symbolIdx;
                 }
                 else
                 {
@@ -388,6 +407,8 @@ static i32 match_SimpWord(DgyParser *parser, StatType *matchedType)
                     isExternWord(&sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->data.SimpWord.src = *symbolIdx;
+                        statement->type = ST_SIMP_WORD;
                 }
                 else
                 {
@@ -407,6 +428,8 @@ static i32 match_Exec(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"执行语句";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -432,6 +455,7 @@ static i32 match_Exec(DgyParser *parser, StatType *matchedType)
                     isCellReg(&sym))
                 {
                         status = 1;
+                        statement->data.Exec.args[statement->data.Exec.i++] = *symbolIdx;
                 }
                 else if (isReserved(S_JIE_GUO_CUN, &sym))
                 {
@@ -440,6 +464,8 @@ static i32 match_Exec(DgyParser *parser, StatType *matchedType)
                 else if (isReserved(S_WU_JIE_GUO, &sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->data.Exec.tar = -1; // -1 表示无结果
+                        statement->type = ST_EXEC;
                 }
                 else
                 {
@@ -454,6 +480,8 @@ static i32 match_Exec(DgyParser *parser, StatType *matchedType)
                 if (isCellReg(&sym) || isWord(&sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->data.Exec.tar = *symbolIdx;
+                        statement->type = ST_EXEC;
                 }
                 else
                 {
@@ -473,6 +501,8 @@ static i32 match_If(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"条件开始";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -494,6 +524,7 @@ static i32 match_If(DgyParser *parser, StatType *matchedType)
                 if (isValue(&sym) || isCellReg(&sym))
                 {
                         status = 2;
+                        statement->data.If.cond[statement->data.If.i++] = *symbolIdx;
                 }
                 else
                 {
@@ -508,10 +539,12 @@ static i32 match_If(DgyParser *parser, StatType *matchedType)
                 if (isRelationalOp(&sym) || isLogicalOp(&sym))
                 {
                         status = 1;
+                        statement->data.If.cond[statement->data.If.i++] = *symbolIdx;
                 }
                 else if (isReserved(S_JIU, &sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->type = ST_IF;
                 }
                 else
                 {
@@ -530,6 +563,7 @@ static i32 match_Else(DgyParser *parser, StatType *matchedType)
 {
         static i32 status = 0;
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -545,6 +579,7 @@ static i32 match_Else(DgyParser *parser, StatType *matchedType)
                 {
                         status = MATCH_COMPLETED;
                         *matchedType = ST_ELSE;
+                        statement->type = ST_ELSE;
                 }
                 break;
         }
@@ -555,6 +590,7 @@ static i32 match_ElseEnd(DgyParser *parser, StatType *matchedType)
 {
         static i32 status = 0;
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -570,6 +606,7 @@ static i32 match_ElseEnd(DgyParser *parser, StatType *matchedType)
                 {
                         status = MATCH_COMPLETED;
                         *matchedType = ST_ELSE_END;
+                        statement->type = ST_ELSE_END;
                 }
                 break;
         }
@@ -581,6 +618,8 @@ static i32 match_Hereis(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"跳转标签声明语句";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -602,6 +641,8 @@ static i32 match_Hereis(DgyParser *parser, StatType *matchedType)
                 if (isWord(&sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->data.Hereis.label = *symbolIdx;
+                        statement->type = ST_HEREIS;
                 }
                 else
                 {
@@ -621,6 +662,8 @@ static i32 match_Goto(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"标签跳转语句";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -642,6 +685,8 @@ static i32 match_Goto(DgyParser *parser, StatType *matchedType)
                 if (isWord(&sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->data.Goto.label = *symbolIdx;
+                        statement->type = ST_GOTO;
                 }
                 else
                 {
@@ -660,6 +705,7 @@ static i32 match_LoopBegin(DgyParser *parser, StatType *matchedType)
 {
         static i32 status = 0;
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -675,6 +721,7 @@ static i32 match_LoopBegin(DgyParser *parser, StatType *matchedType)
                 {
                         status = MATCH_COMPLETED;
                         *matchedType = ST_LOOP_BEGIN;
+                        statement->type = ST_LOOP_BEGIN;
                 }
                 break;
         }
@@ -686,6 +733,8 @@ static i32 match_LoopCheck(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"循环条件检测";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -707,6 +756,7 @@ static i32 match_LoopCheck(DgyParser *parser, StatType *matchedType)
                 if (isValue(&sym) || isCellReg(&sym))
                 {
                         status = 2;
+                        statement->data.LoopCheck.cond[statement->data.LoopCheck.i++] = *symbolIdx;
                 }
                 else
                 {
@@ -721,10 +771,12 @@ static i32 match_LoopCheck(DgyParser *parser, StatType *matchedType)
                 if (isRelationalOp(&sym) || isLogicalOp(&sym))
                 {
                         status = 1;
+                        statement->data.LoopCheck.cond[statement->data.LoopCheck.i++] = *symbolIdx;
                 }
                 else if (isReserved(S_TIAO_JIAN, &sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->type = ST_LOOP_CHECK;
                 }
                 else
                 {
@@ -735,7 +787,6 @@ static i32 match_LoopCheck(DgyParser *parser, StatType *matchedType)
                         *matchedType = STATTYPE_UNDEFINED;
                 }
                 break;
-                break;
         }
         return status;
 }
@@ -745,6 +796,8 @@ static i32 match_LoopEnd(DgyParser *parser, StatType *matchedType)
         static i32 status = 0;
         static const wchar_t *statName = L"循环结束";
         DgyStack *analyStack = &(parser->analyStack);
+        DgyStatement *statement = &(parser->statement);
+        i32 *symbolIdx = &(parser->symbolIdx);
         cell_t sym;
         dgyStackTop(analyStack, &sym);
         dgyGetErr();
@@ -765,13 +818,23 @@ static i32 match_LoopEnd(DgyParser *parser, StatType *matchedType)
                 {
                         status = MATCH_COMPLETED;
                         *matchedType = ST_LOOP_END;
+                        statement->data.LoopEnd.type = 2;
+                        statement->type = ST_LOOP_END;
                 }
                 break;
-        case 1: /* "成立" | "不成立" */
-                if (isReserved(S_CHENG_LI, &sym) ||
-                    isReserved(S_BU_CHENG_LI, &sym))
+        case 1: /* "成立" */
+                if (isReserved(S_CHENG_LI, &sym))
                 {
                         status = MATCH_COMPLETED;
+                        statement->data.LoopEnd.type = 1;
+                        statement->type = ST_LOOP_END;
+                }
+                /* "不成立" */
+                else if (isReserved(S_BU_CHENG_LI, &sym))
+                {
+                        status = MATCH_COMPLETED;
+                        statement->data.LoopEnd.type = 0;
+                        statement->type = ST_LOOP_END;
                 }
                 /* <立即数> | <词语> | <外部词语> */
                 else if (isImmd(&sym) ||
@@ -779,6 +842,8 @@ static i32 match_LoopEnd(DgyParser *parser, StatType *matchedType)
                          isExternWord(&sym))
                 {
                         status = 2;
+                        statement->data.LoopEnd.times = *symbolIdx;
+                        statement->type = ST_LOOP_END;
                 }
                 else
                 {
@@ -828,13 +893,11 @@ ErrCode dgyDoParserOnce(DgyParser *parser, FILE *in)
                 dgySetErr(ERR_NULLPTR, L"dgyDoParser");
                 return CODE_FAILURE;
         }
-        DgyStack *analyStack = &(parser->analyStack),
-                 *symbolStack = &(parser->symbolStack);
         StatType matchedType = STATTYPE_UNDEFINED;
         bool matched = false;
         // 清空符号栈
-        dgyStackClear(symbolStack);
-        while (CODE_SUCCESS == getSymbol(in, symbolStack, analyStack))
+        dgyStackClear(&(parser->symbolStack));
+        while (CODE_SUCCESS == getSymbol(in, parser))
         {
                 if (matchedType == STATTYPE_UNDEFINED)
                 {
@@ -874,10 +937,13 @@ ErrCode dgyParserInit(DgyParser *parser)
                 dgySetErr(ERR_NULLPTR, L"dgyParserInit");
                 return CODE_FAILURE;
         }
+        memset(parser, 0, sizeof(DgyParser));
         /* 创建 分析栈 */
         dgyStackInit(&(parser->analyStack), 16);
         /* 创建 符号栈 */
         dgyStackInit(&(parser->symbolStack), 16);
+        /* 初始化语句表示 */
+        dgyStatInit(&(parser->statement));
         return CODE_SUCCESS;
 }
 

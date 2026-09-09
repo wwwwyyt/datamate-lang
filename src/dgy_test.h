@@ -1,7 +1,8 @@
 #ifndef _dgy_test_h
 #define _dgy_test_h
 
-#include "dgy_all.h"
+#include "dgy_type.h"
+#include "dgy_cell.h"
 #include "dgy_error.h"
 #include "dgy_lexer.h"
 #include "dgy_parser.h"

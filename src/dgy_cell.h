@@ -1,25 +1,12 @@
-#ifndef _dgy_all_h
-#define _dgy_all_h
+#ifndef _dgy_cell_h
+#define _dgy_cell_h
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <wchar.h>
-#include <locale.h>
-#include <errno.h>
-#include <wctype.h>
-#include <stdbool.h>
-
-typedef uint64_t u64;
-typedef int64_t i64;
-typedef uint32_t u32;
-typedef int32_t i32;
-typedef uint8_t u8;
+#include "dgy_type.h"
 
 typedef enum
 {
-        CELL_FLAG_LEN, /* 用于在 symbol stack 中存储多单元符号长度 */
+        CELL_UNDEFINED = -1, /* 用于类型未确定的元素 */
+        CELL_FLAG_LEN,       /* 用于在 symbol stack 中存储多单元符号长度 */
 
         CELL_LEXER_IMMD,
         CELL_LEXER_STR,
@@ -54,4 +41,4 @@ typedef struct
         CellType type;
 } cell_t;
 
-#endif /* _dgy_all_h */
+#endif /* _dgy_cell_h */

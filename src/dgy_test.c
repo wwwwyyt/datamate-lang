@@ -1,5 +1,4 @@
 #include "dgy_test.h"
-#include "dgy_builtin.h"
 
 static void test_lexer(void)
 {
@@ -14,7 +13,7 @@ static void test_parser(void)
         DgyParser parser;
         dgyParserInit(&parser);
         dgyDoParserOnce(&parser, stdin);
-        dgyStackDump(&parser.symbolStack, 0, -1);
+        dgyStackDump(&(parser.symbolStack), 0, -1);
         dgyParserDestroy(&parser);
 }
 
