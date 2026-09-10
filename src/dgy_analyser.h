@@ -12,9 +12,12 @@ typedef struct
 
         /** @brief 字节码流 */
         FILE *bcstream;
+
+        /** @brief 词典指针 */
+        DgyDict *wordDict;
 } DgyAnalyser;
 
-ErrCode dgyAnalyserInit(DgyAnalyser *analyser);
+ErrCode dgyAnalyserInit(DgyAnalyser *analyser, DgyDict *wordDict);
 ErrCode dgyAnalyserDestroy(DgyAnalyser *analyser);
 ErrCode dgyDoAnalyserOnce(DgyAnalyser *analyser, FILE *in);
 
