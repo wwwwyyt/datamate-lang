@@ -1,13 +1,38 @@
 #include "dgy_core.h"
 #include "dgy_error.h"
 
-static DgyCore _core;
-
-void dgyCoreInit(void)
+ErrCode dgyCoreInit(DgyCore *core, FILE *in, FILE *out)
 {
-        dgyStackInit(&_core.codeStack, 16);
-        dgyStackInit(&_core.dataStack, 16);
-        dgyStackInit(&_core.execStack, 16);
-        dgyDictInit(&_core.wordDict, 16);
-        dgyBuiltinInit(&_core.codeStack, &_core.wordDict);
+        if (!core)
+        {
+                dgySetErr(ERR_NULLPTR, L"dgyCoreInit");
+                return CODE_FAILURE;
+        }
+        memset(core, 0, sizeof(DgyCore));
+        /* 初始化数据栈 */
+        dgyStackInit(&(core->dataStack), 16);
+        /* 初始化词典 */
+        dgyDictInit(&(core->wordDict), 16);
+        /* 初始化语义分析器 */
+        dgyAnalyserInit(&(core->analyser));
+        /* 初始化输入和输出流 */
+        core->in = in;
+        core->out = out;
+        return CODE_SUCCESS;
+}
+
+ErrCode dgyCoreDestroy(DgyCore *core)
+{
+        if (!core)
+        {
+                dgySetErr(ERR_NULLPTR, L"dgyCoreDestroy");
+                return CODE_FAILURE;
+        }
+        /* 销毁数据栈 */
+        dgyStackDestroy(&(core->dataStack));
+        /* 销毁词典 */
+        dgyDictDestroy(&(core->wordDict));
+        /* 初始化语义分析器 */
+        dgyAnalyserDestroy(&(core->analyser));
+        return CODE_SUCCESS;
 }

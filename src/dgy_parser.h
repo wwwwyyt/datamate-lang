@@ -14,6 +14,7 @@ enum
         MATCH_COMPLETED = -1
 };
 
+/** @brief 语法分析层，从输入流获取符号，输出语句的中间表示 */
 typedef struct
 {
         /** @brief 用于语法分析，仅保存符号类型 */

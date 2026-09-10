@@ -100,12 +100,12 @@ ErrCode dgyStackGetItemAt(const DgyStack *s, i32 idx, cell_t *data, i32 *absi)
                         *absi = idx;
                 }
         }
-        else if (s->sp + idx + 1 >= 0)
+        else if (s->sp + idx >= 0)
         {
-                *data = s->stack[s->sp + idx + 1];
+                *data = s->stack[s->sp + idx];
                 if (absi)
                 {
-                        *absi = s->sp + idx + 1;
+                        *absi = s->sp + idx;
                 }
         }
         else
@@ -194,6 +194,6 @@ ErrCode dgyStackDump(const DgyStack *s, i32 start, i32 end)
                 }
         }
         wprintf(L"\n");
-        wprintf(L"----------------");
+        wprintf(L"----------------\n");
         return CODE_SUCCESS;
 }

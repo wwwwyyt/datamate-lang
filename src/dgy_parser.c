@@ -879,7 +879,7 @@ static bool matchStat(const StatType statType,
         bool matched = false;
         if (MATCH_COMPLETED == match(parser, matchedType))
         {
-                wprintf(L"归约 %u\n", *matchedType);
+                // wprintf(L"归约 %u\n", *matchedType);
                 matched = true;
                 *matchedType = STATTYPE_UNDEFINED;
         }

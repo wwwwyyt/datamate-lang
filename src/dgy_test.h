@@ -8,6 +8,7 @@
 #include "dgy_parser.h"
 #include "dgy_stack.h"
 #include "dgy_builtin.h"
+#include "dgy_analyser.h"
 
 void dgyUnitTest(void);
 

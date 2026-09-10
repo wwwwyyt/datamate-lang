@@ -17,12 +17,24 @@ static void test_parser(void)
         dgyParserDestroy(&parser);
 }
 
+static void test_analyser(void)
+{
+        DgyAnalyser analyser;
+        dgyAnalyserInit(&analyser);
+        for (;;)
+        {
+                dgyDoAnalyserOnce(&analyser, stdin);
+        }
+        dgyAnalyserDestroy(&analyser);
+}
+
 void dgyUnitTest(void)
 {
         if (0)
         {
                 test_lexer();
                 test_parser();
+                test_analyser();
         }
-        test_parser();
+        test_analyser();
 }

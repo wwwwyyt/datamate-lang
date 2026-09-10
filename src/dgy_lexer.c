@@ -775,7 +775,8 @@ static void matched_Str(const wchar_t *buffer, SymbolType type, DgyStack *out)
 
 static void matched_Comment(const wchar_t *buffer, SymbolType type, DgyStack *out)
 {
-        // Dummy
+        cell_t data = {.data.sint = type, .type = CELL_LEXER_COMMENT};
+        dgyStackPush(out, data);
 }
 
 static void matched_Reserved(const wchar_t *buffer, SymbolType type, DgyStack *out)

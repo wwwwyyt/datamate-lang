@@ -80,6 +80,7 @@ enum
         S_MAX_WORD_LEN = 1024, /* 最长词语长度 */
 };
 
+/** @brief 词法分析器，从输入流获取一个符号 */
 ErrCode dgyDoLexerOnce(FILE *in, DgyStack *out);
 
 #endif /* _dgy_lexer_h */
